@@ -4,12 +4,12 @@ import fastify, { FastifyReply, FastifyRequest } from 'fastify';
 import { httpEndpoint, fastifyLogger, LogType, httpResponse } from '../../src/index';
 import { chain } from '@flow-engine/core';
 
-const paramsRequestLogBuilder = (message: string) => ({ request }: { request: FastifyRequest, reply: FastifyReply }) => ({
+const paramsRequestLogBuilder = (message: string) => async ({ request }: { request: FastifyRequest, reply: FastifyReply }) => ({
     message,
     content: request.params as object,
 });
 
-const bodyRequestLogBuilder = (message: string) => ({ request }: { request: FastifyRequest, reply: FastifyReply }) => ({
+const bodyRequestLogBuilder = (message: string) => async ({ request }: { request: FastifyRequest, reply: FastifyReply }) => ({
     message,
     content: request.body as object,
 });
@@ -30,9 +30,10 @@ describe('Test all endpoints with response and logs', () => {
     httpEndpoint.get<{ Params: { value: string } }>(
         instance,
         '/api/test/:value',
-        chain<{ request: FastifyRequest, reply: FastifyReply }, { request: FastifyRequest, reply: FastifyReply }>(
-            fastifyLogger(instance, LogType.info, paramsRequestLogBuilder('GET params')),
-        )
+        chain<{ request: FastifyRequest, reply: FastifyReply }>()
+            .add<{ request: FastifyRequest, reply: FastifyReply }>(
+                fastifyLogger(instance, LogType.info, paramsRequestLogBuilder('GET params')),
+            )
             .add<{ request: FastifyRequest, reply: FastifyReply }>(
                 httpResponse(200, 'request.params'),
             ),
@@ -41,9 +42,10 @@ describe('Test all endpoints with response and logs', () => {
     httpEndpoint.post<{ Body: { value: number } }>(
         instance,
         '/api/test',
-        chain<{ request: FastifyRequest, reply: FastifyReply }, { request: FastifyRequest, reply: FastifyReply }>(
-            fastifyLogger(instance, LogType.info, bodyRequestLogBuilder('POST body')),
-        )
+        chain<{ request: FastifyRequest, reply: FastifyReply }>()
+            .add<{ request: FastifyRequest, reply: FastifyReply }>(
+                fastifyLogger(instance, LogType.info, bodyRequestLogBuilder('POST body')),
+            )
             .add<{ request: FastifyRequest, reply: FastifyReply }>(
                 httpResponse(200, 'request.body'),
             ),
@@ -52,9 +54,10 @@ describe('Test all endpoints with response and logs', () => {
     httpEndpoint.put<{ Body: { value: number } }>(
         instance,
         '/api/test',
-        chain<{ request: FastifyRequest, reply: FastifyReply }, { request: FastifyRequest, reply: FastifyReply }>(
-            fastifyLogger(instance, LogType.info, bodyRequestLogBuilder('PUT body')),
-        )
+        chain<{ request: FastifyRequest, reply: FastifyReply }>()
+            .add<{ request: FastifyRequest, reply: FastifyReply }>(
+                fastifyLogger(instance, LogType.info, bodyRequestLogBuilder('PUT body')),
+            )
             .add<{ request: FastifyRequest, reply: FastifyReply }>(
                 httpResponse(200, 'request.body'),
             ),
@@ -63,9 +66,10 @@ describe('Test all endpoints with response and logs', () => {
     httpEndpoint.patch<{ Body: { value: number } }>(
         instance,
         '/api/test',
-        chain<{ request: FastifyRequest, reply: FastifyReply }, { request: FastifyRequest, reply: FastifyReply }>(
-            fastifyLogger(instance, LogType.info, bodyRequestLogBuilder('PATCH body')),
-        )
+        chain<{ request: FastifyRequest, reply: FastifyReply }>()
+            .add<{ request: FastifyRequest, reply: FastifyReply }>(
+                fastifyLogger(instance, LogType.info, bodyRequestLogBuilder('PATCH body')),
+            )
             .add<{ request: FastifyRequest, reply: FastifyReply }>(
                 httpResponse(200, 'request.body'),
             ),
@@ -74,9 +78,10 @@ describe('Test all endpoints with response and logs', () => {
     httpEndpoint.delete<{ Params: { value: string } }>(
         instance,
         '/api/test/:value',
-        chain<{ request: FastifyRequest, reply: FastifyReply }, { request: FastifyRequest, reply: FastifyReply }>(
-            fastifyLogger(instance, LogType.info, paramsRequestLogBuilder('DELETE params')),
-        )
+        chain<{ request: FastifyRequest, reply: FastifyReply }>()
+            .add<{ request: FastifyRequest, reply: FastifyReply }>(
+                fastifyLogger(instance, LogType.info, paramsRequestLogBuilder('DELETE params')),
+            )
             .add<{ request: FastifyRequest, reply: FastifyReply }>(
                 httpResponse(200, 'request.params'),
             ),
@@ -265,7 +270,7 @@ describe('Test all endpoints with response and logs', () => {
     test('FastifyLogger without http request', async () => {
         logs = [];
 
-        const flow = fastifyLogger<{ value: number, request?: FastifyRequest }>(instance, LogType.info, ({ value }) => ({
+        const flow = fastifyLogger<{ value: number, request?: FastifyRequest }>(instance, LogType.info, async ({ value }) => ({
             message: 'test log',
             content: { value },
         }));
